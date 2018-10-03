@@ -22,7 +22,7 @@ RainMachine Mixer (that aggregates data from multiple sources) runs only hourly.
 Minimal configuration:
 
 [StdRESTful]
-    [[RainMachie]]
+    [[RainMachine]]
         token = ACCESS_TOKEN
 	ip = RAINMACHINE IP
 """
@@ -57,36 +57,37 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 
-def _get_day_max_temp(dbm, ts):
+def _get_day_min_max_temp(dbm, ts):
     sod = startOfDayUTC(ts)
-    val = dbm.getSql("SELECT MAX(outTemp) FROM %s "
+    val = dbm.getSql("SELECT MIN(outTemp), MAX(outTemp) FROM %s "
                      "WHERE dateTime>? AND dateTime<=?" %
                      dbm.table_name, (sod, ts))
-    return val[0] if val is not None else None
+    if val is None:
+	return None, None
 
-def _get_day_min_temp(dbm, ts):
-    sod = startOfDayUTC(ts)
-    val = dbm.getSql("SELECT MIN(outTemp) FROM %s "
-                     "WHERE dateTime>? AND dateTime<=?" %
-                     dbm.table_name, (sod, ts))
-    return val[0] if val is not None else None
+    return val
+
+# convert temperature to celsius (we need this from values read from DB)
+def _convert_temperature(v, from_unit):
+    if from_unit is None or v is None:
+        return None
+    if from_unit != weewx.METRIC:
+        std_type, _ = weewx.units.getStandardUnitType(from_unit, 'outTemp')
+        from_type = (v, std_type, 'group_temperature')
+        v = weewx.units.convert(from_type, 'degree_C')[0]
+    return v
+
 
 
 class RainMachine(weewx.restx.StdRESTful):
     def __init__(self, engine, config_dict):
         super(RainMachine, self).__init__(engine, config_dict)
         loginf('service version is %s' % VERSION)
-        try:
-            site_dict = config_dict['StdRESTful']['RainMachine']
-            site_dict = accumulateLeaves(site_dict, max_level=1)
-            site_dict['token']
-            site_dict['ip']
-        except KeyError, e:
-            logerr("Data will not be posted: Missing option %s" % e)
-            return
 
-	if config_dict['StdRESTful']['RainMachine'].has_key('password'):
-            site_dict['password'] = dict(config_dict['StdRESTful']['RainMachine']['password'])
+	site_dict = weewx.restx.get_site_dict(config_dict, 'RainMachine', 'token', 'ip')
+	if site_dict is None:
+	    logerr("Data will not be posted: Missing configuration options.")
+            return
 
         site_dict['manager_dict'] = weewx.manager.get_manager_dict(
             config_dict['DataBindings'], config_dict['Databases'], 'wx_binding')
@@ -99,6 +100,7 @@ class RainMachine(weewx.restx.StdRESTful):
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
+
 
 class RainMachineThread(weewx.restx.RESTThread):
     """
@@ -147,8 +149,8 @@ RainMachine POST /api/4/parser/data expected data format (metric units only):
 	'dewpoint': ('dewpoint', 1.0, 0.0), # C
         'pressure':    ('barometer',   10.0, 0.0),    # kPa
         'rain':		('dayRain',      10.0, 0.0),   # mm
-	'mintemp':	('OutTempMin', 1.0, 0.0), # C
-	'maxtemp':	('OutTempMax', 1.0, 0.0), # C
+	'mintemp':	('outTempMin', 1.0, 0.0), # C
+	'maxtemp':	('outTempMax', 1.0, 0.0), # C
 	'et':		('ET', 10.0, 0), # mm
         }
 
@@ -191,9 +193,9 @@ RainMachine POST /api/4/parser/data expected data format (metric units only):
         rec = super(RainMachineThread, self).get_record(record, dbm)
         # put everything into the right units
         rec = weewx.units.to_METRIC(rec)
-        # add the fields specific to weatherbug
-        rec['outTempMax'] = _get_day_max_temp(dbm, rec['dateTime'])
-        rec['outTempMin'] = _get_day_min_temp(dbm, rec['dateTime'])
+        rec['outTempMin'], rec['outTempMax'] = _get_day_min_max_temp(dbm, rec['dateTime'])
+	rec['outTempMin'] = _convert_temperature(rec['outTempMin'], record['usUnits'])
+	rec['outTempMax'] = _convert_temperature(rec['outTempMax'], record['usUnits'])
         return rec
 
 
