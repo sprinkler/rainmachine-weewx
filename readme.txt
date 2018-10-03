@@ -13,7 +13,7 @@ Installation instructions:
 
 1) run the installer:
 
-wee_extension --install weewx-rainmachine.tgz
+wee_extension --install weewx-rainmachine-v0.2.tar.gz
 
 2) modify weewx.conf:
 

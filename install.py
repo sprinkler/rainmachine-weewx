@@ -8,7 +8,7 @@ def loader():
 class RainMachineInstaller(ExtensionInstaller):
     def __init__(self):
         super(RainMachineInstaller, self).__init__(
-            version="0.1",
+            version="0.2",
             name='rainmachine',
             description='Upload weather data to RainMachine smart irrigation controller.',
             author="Nicu Pavel",
