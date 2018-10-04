@@ -2,11 +2,13 @@ rainmachine - weewx extension that sends data to RainMachine smart irrigation co
 Copyright 2018 Green Electronics LLC
 
 This extension only works on the local network (doesn't work with RainMachine 
-Remote Access service). RainMachine IP address and https port 8080 or 
-http port 8081 must be accessible from WeeWX installation.
+Remote Access service). RainMachine IP address and http port 8081 or 
+https port 8080 must be accessible from WeeWX installation. The usessl parameter 
+controls if connection to RainMachine should be http or https. On certain version of 
+weewx the usessl=true (https) might not work because of RainMachine self-signed certificate 
+for local network.
 
-This extension requires RainMachine to be updated to latest version and 
-have RainMachine API 4.6 to work.
+This extension requires RainMachine to be updated to latest version and have RainMachine API 4.6 to work.
 
 
 Installation instructions:
