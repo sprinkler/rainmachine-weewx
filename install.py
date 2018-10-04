@@ -8,7 +8,7 @@ def loader():
 class RainMachineInstaller(ExtensionInstaller):
     def __init__(self):
         super(RainMachineInstaller, self).__init__(
-            version="0.2",
+            version="0.3",
             name='rainmachine',
             description='Upload weather data to RainMachine smart irrigation controller.',
             author="Nicu Pavel",
@@ -18,6 +18,7 @@ class RainMachineInstaller(ExtensionInstaller):
                 'StdRESTful': {
                     'RainMachine': {
                         'token': 'INSERT_RAINMACHINE_ACCESS_TOKEN',
-                        'ip': 'INSERT_RAINMACHINE_IP'}}},
+                        'ip': 'INSERT_RAINMACHINE_IP',
+			'usessl': False }}},
             files=[('bin/user', ['bin/user/rainmachine.py'])]
             )

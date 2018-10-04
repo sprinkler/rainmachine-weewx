@@ -25,6 +25,7 @@ Minimal configuration:
     [[RainMachine]]
         token = ACCESS_TOKEN
 	ip = RAINMACHINE IP
+	usessl = false
 """
 
 import Queue
@@ -38,7 +39,7 @@ import weewx.restx
 import weewx.units
 from weeutil.weeutil import to_bool, accumulateLeaves, startOfDayUTC
 
-VERSION = "0.2"
+VERSION = "0.3"
 
 if weewx.__version__ < "3":
     raise weewx.UnsupportedFeature("weewx 3 is required, found %s" %
@@ -89,6 +90,9 @@ class RainMachine(weewx.restx.StdRESTful):
 	    logerr("Data will not be posted: Missing configuration options.")
             return
 
+	site_dict.setdefault('usessl', False)
+	site_dict['usessl'] = to_bool(site_dict.get('usessl'))
+
         site_dict['manager_dict'] = weewx.manager.get_manager_dict(
             config_dict['DataBindings'], config_dict['Databases'], 'wx_binding')
 
@@ -96,7 +100,7 @@ class RainMachine(weewx.restx.StdRESTful):
         self.archive_thread = RainMachineThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        loginf("Data will be uploaded for RainMachine located at %s" % site_dict['ip'])
+        loginf("Data will be uploaded for RainMachine located at %s ssl: %s" % (site_dict['ip'], site_dict['usessl']))
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -155,7 +159,7 @@ RainMachine POST /api/4/parser/data expected data format (metric units only):
         }
 
     def __init__(self, queue,
-                 token, ip, manager_dict,
+                 token, ip, usessl, manager_dict,
                  skip_upload=False,
                  post_interval=3600, max_backlog=0, stale=None,
                  log_success=True, log_failure=True,
@@ -173,12 +177,20 @@ RainMachine POST /api/4/parser/data expected data format (metric units only):
                                                    retry_wait=retry_wait)
         self.token = token
         self.ip = ip
+	self.usessl = usessl
         self.skip_upload = to_bool(skip_upload)
 
     def process_record(self, record, dbm):
         r = self.get_record(record, dbm)
         data = self.get_data(r)
-        url = "https://%s:8080/api/4/parser/data?access_token=%s" % (self.ip, self.token)
+	if self.usessl:
+	    proto = "https"
+	    port = "8080"
+	else:
+	    proto = "http"
+	    port = "8081"
+
+        url = "%s://%s:%s/api/4/parser/data?access_token=%s" % (proto, self.ip, port, self.token)
 
         if self.skip_upload:
             loginf("skipping upload")
