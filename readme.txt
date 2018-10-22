@@ -23,7 +23,7 @@ wee_extension --install weewx-rainmachine-v0.3.tar.gz
     [[RainMachine]]
         token = RAINMACHINE_ACCESS_TOKEN
         ip = RAINMACHINE_IP_ADDRESS
-	usessl = false
+	usessl = False
 
 The token can be obtained with a POST request:
 curl -X POST -k -d ' { "pwd": "your_password", "remember":1}' https://rainmachine_ip:8080/api/4/auth/login

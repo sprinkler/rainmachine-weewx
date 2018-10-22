@@ -146,16 +146,16 @@ RainMachine POST /api/4/parser/data expected data format (metric units only):
     """
 
     _DATA_MAP = {
-        'timestamp':          ('dateTime',    1, 0),        # epoch
-        'wind':  ('windSpeed',   0.2777777777, 0.0), # m/s
-        'temperature': ('outTemp',     1.0, 0.0),    # C
-        'maxrh':    ('outHumidity', 1.0, 0.0),    # percent
-	'dewpoint': ('dewpoint', 1.0, 0.0), # C
-        'pressure':    ('barometer',   10.0, 0.0),    # kPa
-        'rain':		('dayRain',      10.0, 0.0),   # mm
-	'mintemp':	('outTempMin', 1.0, 0.0), # C
-	'maxtemp':	('outTempMax', 1.0, 0.0), # C
-	'et':		('ET', 10.0, 0), # mm
+        'timestamp':	('dateTime',    1, 0),              # epoch
+        'wind':		('windSpeed',   0.2777777777, 0.0), # m/s
+        'temperature':	('outTemp',     1.0, 0.0),          # C
+        'maxrh':	('outHumidity', 1.0, 0.0),          # percent
+	'dewpoint':	('dewpoint',    1.0, 0.0),          # C
+        'pressure':	('barometer',   0.1, 0.0),          # kPa
+        'rain':		('dayRain',     10.0, 0.0),         # mm
+	'mintemp':	('outTempMin',  1.0, 0.0),          # C
+	'maxtemp':	('outTempMax',  1.0, 0.0),          # C
+	'et':		('ET',          10.0, 0),           # mm
         }
 
     def __init__(self, queue,

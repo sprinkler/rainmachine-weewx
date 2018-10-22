@@ -1,2 +1,8 @@
+0.4
+    * fix for pressure being wrongly converted
+0.3
+    * public working release 
+0.2
+    * internal release
 0.1
-* initial release as packaged weewx extension
+    * initial release as packaged weewx extension
